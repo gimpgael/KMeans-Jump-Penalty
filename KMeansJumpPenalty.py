@@ -57,7 +57,7 @@ class KMeansJumpPenalty():
             
             loss += np.sum(np.sqrt(np.sum((x_class - centroid_class) ** 2,1)))
     
-        loss += np.sign(np.abs(np.diff(classes))) * loss_penalty
+        loss += np.sum(np.sign(np.abs(np.diff(classes))) * loss_penalty)
         
         return loss
     
@@ -88,31 +88,31 @@ class KMeansJumpPenalty():
         # Scale data
         sc = StandardScaler()
         X_std = sc.fit_transform(X)
-        
-        # Pick first step centroids
-        centroids = self.set_centroids(X_std)
-        previous_loss = np.inf
-        
+            
         output = {}
         
         for iter_ in range(n_iter):
+            
+            # Pick first step centroids
+            centroids = self.set_centroids(X_std)
+            previous_loss = np.inf
+            
             for i in range(steps):
                 
                 # Assign each point to a class
-                classes = self.assign(centroids, X)
+                classes = self.assign(centroids, X_std)
                 
                 # Computes the global loss
                 loss = self.get_loss(X_std, classes, centroids, loss_penalty)
                 
-                # If improvement
-                if loss <= previous_loss:
+                # If improvement keep going, otherwise track metrics
+                if (loss < previous_loss) and (i != steps-1):
                     previous_loss = loss
-                
-                    # Update centroids
                     centroids = self.update_centroids(X_std, classes, centroids, eta, loss)
                     
                 else:
                     output[iter_] = [loss, centroids, classes]
+                    break
             
         # Get best result
         losses = [output[x][0] for x in range(n_iter)]
