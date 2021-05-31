@@ -67,9 +67,10 @@ class KMeansJumpPenalty():
         for class_ in range(self.n_cluster):
             x_class = X[classes==class_,:]
             
-            for feature in range(X.shape[1]):
-                centroids[class_, feature] += -eta * 1/x_class.shape[0] * np.sum((centroids[class_, feature] - x_class[:, feature])) / loss
-        
+            if x_class.shape[0] > 0:  
+                for feature in range(X.shape[1]):
+                    centroids[class_, feature] += -eta * 1/x_class.shape[0] * np.sum((centroids[class_, feature] - x_class[:, feature])) / loss
+            
         return centroids
     
     def fit(self, X, steps, n_iter, eta, loss_penalty):
@@ -92,6 +93,8 @@ class KMeansJumpPenalty():
         output = {}
         
         for iter_ in range(n_iter):
+            if iter_ % 100 == 0:
+                print(iter_)
             
             # Pick first step centroids
             centroids = self.set_centroids(X_std)
